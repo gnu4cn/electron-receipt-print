@@ -1,0 +1,69 @@
+/* Generic pane rules */
+body, html{ 
+    overflow: hidden;
+    margin: 0; 
+    height: 100%;
+    padding: 0;
+}
+
+td, th {
+    vertical-align: middle;
+    text-align: center;
+}
+
+.underscore-not-need {
+    padding: 5px;
+    display: inline-block;
+}
+
+.underscore-need {
+    padding: 5px;
+    display: inline-block;
+    border-bottom: 1px solid grey;
+}
+
+.container-fluid {
+    height: 100%;
+}
+
+.receipt-head {
+    text-align: center;
+}
+
+.container-fluid {
+    padding: 0;
+}
+
+hr {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.last-row {
+    margin-top: 3px;
+    padding: 5px;
+}
+
+.narrowed-box {
+    padding: 5px;
+    display: inline-block;
+}
+
+.longer-box {
+    width: 30%;
+}
+
+.shorter-box {
+    width: 18%;
+}
+
+h5{
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+@media screen, print {
+    .items-div {
+        height: 60%;   
+    }
+}

@@ -1,0 +1,49 @@
+{
+    "name": "Electron-Receipt-Print",
+    "productName": "Electron票据打印软件",
+    "version": "0.1.0",
+    "electronVersion": "1.8.8",
+    "description": "An Example",
+    "author": "unisko@gmail.com",
+    "license": "SEE LICENSE IN copying",
+    "main": "main.js",
+    "scripts": {
+        "start": "./node_modules/.bin/electron .",
+        "rebuild-leveldown-ia32": "cd node_modules/leveldown &&node-gyp rebuild --target=1.8.8 --arch=ia32 --dist-url=https://atom.io/download/atom-shell",
+        "package-ia32": "electron-packager ./ ElectronReceiptPrint --app-version=0.1.0  --overwrite --platform=win32 --arch=ia32 --icon=./img/icon.ico --prune=true --out=./dist --version-string.FileDescription=Electron票据打印软件-基于Electron-Angular-Bootstrap-LevelDB等, --version-string.Productname=Electron票据打印软件-Peng-Hailin-unisko@gmail.com --version-string.CompanyName=xfoss.com --version-string.FileDescription=Electron票据打印软件",
+        "rebuild-leveldown-x64": "cd node_modules/leveldown &&node-gyp rebuild --target=1.8.8 --arch=x64 --dist-url=https://atom.io/download/atom-shell",
+        "package-x64": "electron-packager ./ ElectronReceiptPrint --app-version=0.1.0 --overwrite --platform=win32 --arch=x64 --icon=./img/icon.ico --prune=true --out=./dist --version-string.FileDescription=Electron票据打印软件_基于Electron_Angular_Bootstrap_LevelDB等, --version-string.ProductVersion=0.1.0 --version-string.ProductName=Electron票据打印软件_Peng_Hailin_unisko@gmail.com --version-string.CompanyName=xfoss.com --version-string.FileDescription=Electron票据打印软件",
+        "test": "standard",
+        "create-installer-win-ia32": "node installers/windows/createinstaller-ia32.js",
+        "create-installer-win-x64": "node installers/windows/createinstaller-x64.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/gnu4cn/electronjs-receipt-print.git"
+    },
+    "devDependencies": {
+        "electron": "^1.8.8",
+        "electron-packager": "^13.1.1",
+        "electron-winstaller": "^2.7.0"
+    },
+    "dependencies": {
+        "angular": "^1.7.8",
+        "angular-animate": "^1.7.8",
+        "angular-aria": "^1.7.8",
+        "angular-i18n": "^1.7.8",
+        "angular-material": "^1.1.14",
+        "angular-messages": "^1.7.8",
+        "angular-route": "^1.7.8",
+        "angular-sanitize": "^1.7.8",
+        "angularjs-datepicker": "^2.1.23",
+        "bootstrap": "^3.4.1",
+        "electron-store": "^2.0.0",
+        "font-awesome": "^4.7.0",
+        "jquery": "^3.3.1",
+        "leveldown": "^4.0.2",
+        "levelup": "^1.2.1",
+        "moment": "^2.24.0",
+        "npm-check-updates": "^3.1.1",
+        "paper-css": "^0.3.0"
+    }
+}

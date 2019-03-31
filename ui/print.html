@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html ng-app="receiptPrintApp">
+    <head>
+        <meta charset="UTF-8">
+        <link href="../node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="../node_modules/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+
+        <!-- for ngMaterial -->
+        <link href="../node_modules/angular-material/angular-material.min.css" rel="stylesheet">
+
+        <!-- paper-css -->
+        <link href="../node_modules/paper-css/paper.min.css" rel="stylesheet">
+        <link href="./css/print.css" rel="stylesheet">
+
+        <style>@page {size: A5 landscape}</style>
+    </head>
+    <body ng-controller="receiptPrintController" class="A5 landscape">
+        <section class="sheet padding-15mm" layout="column" ng-init="receipt.load()">
+            <div class="receipt-head" flex>
+                <h3>{{title}}</h3>
+            </div>
+            <div flex>
+                <div style="display: inline-block; width: 50%;">
+                    <h5>
+                        <label for="receiptUnite" class="item-label">承办单位：</lable>
+                            <div id="receiptUnite" class="underscore-not-need">
+                                {{receipt.uniteObj.name}}
+                            </div>
+                    </h5>
+                </div>
+                <div style="display: inline-block; width: 20%;">
+                    <h5>
+                        <label for="receiptPersonnel" class="item-label">联系人：</lable>
+                            <div id="receiptPersonnel" class="underscore-not-need">
+                                {{receipt.personObj.name}}</div>
+                    </h5>
+                </div>
+
+                <div style="display: inline-block; width: 25%;">
+                    <h5>
+                        <label for="receiptSerialNumber" class="item-label">单号：</lable>
+                            <div id="receiptSerialNumber" class="underscore-not-need" >
+                                <code>{{receipt.SN}}</code>
+                            </div>
+                    </h5>
+                </div>
+            </div>
+
+            <md-divider></md-divider>
+
+            <div class="items-div" flex layout="column">
+                <table class="table table-hover table-striped table-condensed" flex="nogrow">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>项 目</th>
+                            <th>开始~结束日期</th>
+                            <th>详 情</th>
+                            <th>数 量</th>
+                            <th>接待标准</th>
+                            <th>费用（元）</th>
+                        </tr>
+                    </thead>
+                    <tbody ng-if="receipt.items.length > 0">
+                        <tr ng-repeat="item in receipt.items track by $index">
+
+                            <!--编号-->
+                            <td>{{$index + 1}}</td>
+
+                            <!-- 子类型 -->
+                            <td>{{item.typeObj.name}}</td>
+
+                            <!--开始日期 ~ 结束日期-->
+                            <td><code>{{item.startDate}}</code> ~ <code>{{item.endDate}}</code></td>
+
+                            <!--详情-->
+                            <td>{{item.subTypeOneObj.name+(item.hasOwnProperty('siteObj') ? ', '+item.siteObj.name : '')}}</td>
+
+                            <!--数量-->
+                            <td><code>{{item.amount}}</code><span>{{item.typeObj.unite }}<span></td>
+
+                            <!--标准-->
+                            <td><code>{{item.price}}</code>{{item.typeObj.rate}}</td>
+
+                            <!---->
+                            <td align="right"><code>{{item.fee}}.00</code></td>
+
+                        </tr>
+                    </tbody>
+                </table>
+                <span style="text-align: center; width: 100%; display: block;"><i>__以下空白__</i></span>
+            </div>
+
+            <div class="last-row row" flex layout="row">
+                <div class="narrowed-box col-xs-8">
+                    <h5>
+                        <label for="receiptFee" class="item-label">合计：</label>
+                        <div id="receiptFee" class="underscore-need">
+                            <code>{{receipt.fee}}.00</code>元（{{receipt.feeUppercase}}）</div>
+                    </h5>
+                </div>
+                <div class="narrowed-box col-xs-4">
+                    <h5>
+                        <label for="receiptPayment" class="item-label">结帐方式：</label>
+                        <div id="receiptPayment" class="underscore-need">
+                            {{receipt.paymentObj.name+'&nbsp;'}}</div>
+                    </h5>
+                </div>
+            </div>
+            <md-divider></md-divier>
+
+            <div flex layout="row">
+                <div class="narrowed-box longer-box" flex="25">
+                    <h5>
+                        <label for="receiptFee" class="item-label">前台/厨师长：</label>
+                        <div id="receiptFee" class="underscore-need">
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        </div>
+                    </h5>
+                </div>
+                <div class="narrowed-box longer-box" flex="25">
+                    <h5>
+                        <label for="receiptFee" class="item-label">餐厅/客房领班：</label>
+                        <div id="receiptFee" class="underscore-need">
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        </div>
+                    </h5>
+                </div>
+                <div class="narrowed-box shorter-box" flex="25">
+                    <h5>
+                        <label for="receiptFee" class="item-label">经办人：</label>
+                        <div id="receiptFee" class="underscore-need">
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        </div>
+                    </h5>
+                </div>
+                <div class="narrowed-box shorter-box" flex="25">
+                    <h5>
+                        <label for="receiptFee" class="item-label">管理员：</label>
+                        <div id="receiptFee" class="underscore-need">
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        </div>
+                    </h5>
+                </div>
+            </div>
+        </section>
+        <!-- 这一行很重要，否则无法使用jQuery, 以致无法使用Bootstrap -->
+        <script>window.$ = window.jQuery = require('../node_modules/jquery/dist/jquery.min.js');</script>
+        <script>require("../node_modules/bootstrap/dist/js/bootstrap.min.js")</script>
+        <script>require("../node_modules/angular/angular.min.js")</script>
+
+        <!-- for ngMaterial-->
+        <script>require("../node_modules/angular-animate/angular-animate.min.js")</script>
+        <script>require("../node_modules/angular-aria/angular-aria.min.js")</script>
+        <script>require("../node_modules/angular-messages/angular-messages.min.js")</script>
+        <script>require("../node_modules/angular-material/angular-material.min.js")</script>
+
+        <script>require("../node_modules/angular-route/angular-route.min.js")</script>
+        <script>require("../node_modules/angular-sanitize/angular-sanitize.min.js")</script>
+        <script>require("../node_modules/angularjs-datepicker/src/js/angular-datepicker.js")</script>
+        <script>require("../node_modules/angular-i18n/angular-locale_zh-cn.js")</script>
+    </body>
+    <script>require('./js/print')</script>
+</html>

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html ng-app="receiptPrintApp">
+    <head>
+        <meta charset="UTF-8">
+        <link href="../node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="../node_modules/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+        <link href="../node_modules/angularjs-datepicker/src/css/angular-datepicker.css" rel="stylesheet">
+        <!-- for ngMaterial -->
+        <link href="../node_modules/angular-material/angular-material.min.css" rel="stylesheet">
+
+        <link href="./css/app.css" rel="stylesheet">
+    </head>
+    <body ng-controller="ReceiptPrintController as ctrl" layout>
+        <div layout="column" flex="35" style="border-right: 2px solid; padding: 2px;">
+            <span flex="nogrow"><h3>新开结帐单<i class="fa fa-file-o" aria-hidden="true"></i></h3></span>
+            <div layout="column" flex="nogrow" class="receipt-form" ng-init="receipt.init()">
+                <form name="f" class="ng-pristine ng-invalid ng-invalid-required" novalidation>
+                    <!-- novalidate prevents HTML5 validation since we will be validating ourselves -->
+                    <!-- 消费单位及联系人 -->
+                    <div flex class="form-group" layout="row">
+                        <div flex="90">
+                            <md-autocomplete md-selected-item="receipt.uniteObj" 
+                                             placeholder="开具单位" 
+                                             md-input-name="receiptUniteObj"
+                                             md-search-text="uniteSearchText"
+                                             md-items="unite in unites.getMatched(uniteSearchText)"
+                                             md-item-text="unite.name" 
+                                             md-input-maxlength="128" 
+                                             md-no-cache="true"
+                                             md-min-length="1" 
+                                             md-selected-item-change="receipt.uniteObjChanged()" required >
+                                             <md-item-template>
+                                                 <span md-highlight-text="uniteSearchText">{{unite.name}}</span><br />
+                                             </md-item-template>
+                                             <md-not-found>
+                                                 确定要<a ng-click="unites.add(uniteSearchText)"> 使用 </a>“{{uniteSearchText}}”吗？
+                                             </md-not-found>
+                            </md-autocomplete>
+                        </div>
+                        <span flex></span>
+                    </div>
+
+                    <div class="form-group" flex layout="row">
+                        <div flex="45">
+                            <md-autocomplete md-selected-item="receipt.personObj" 
+                                             placeholder="联系人" 
+                                             md-mode="standard"
+                                             md-input-name="receiptPersonObj"
+                                             md-search-text="personSearchText" 
+                                             md-items="p in person.getMatched(personSearchText)"
+                                             md-item-text="p.name" 
+                                             md-no-cache="true"
+                                             md-input-maxlength="64" 
+                                             md-min-length="1" required >
+                                             <md-item-template>
+                                                 <span md-highlight-text="personSearchText">{{p.name}}</span><br />
+                                             </md-item-template>
+                                             <md-not-found>
+                                                 确定要<a ng-click="person.add(personSearchText)"> 使用 </a>“{{personSearchText}}”吗？
+                                             </md-not-found>
+                            </md-autocomplete>
+                        </div>
+                        <!-- 空的 span -->
+                        <span flex></span>
+                        <div class="form-inline">
+                            <label for="paymentMethod">付款方式：</label>
+                            <select class="form-control" 
+                                    id="paymentMethod" required 
+                                    ng-model="receipt.paymentObj" 
+                                    name='payment_method'
+                                    ng-options="p as p.name for p in payments track by p.id"
+                                    ng-change="receipt.changed('paymentObj')"
+                                    >
+                                    <option value=""> - 请选择 - </option>
+                            </select>
+                        </div>
+                        <!-- 移除了单号 -->
+                    </div>
+
+                    <md-divider></md-divider>
+
+                    <!-- 消费项目增加 -->
+                    <div class="form-group" ng-init="tmp.init()" layout="row" flex>
+                        <div class="select-container" flex="30">
+                            <label for="type">消费类别</label>
+                            <select class="form-control" 
+                                    id="type" required
+                                    ng-model="tmp.typeObj"
+                                    name='type'
+                                    ng-options="type as type.name for type in types track by type.id"
+                                    ng-change="tmp.updateTypeObj()"
+                                    >
+                                    <option value=""> - 请选择 - </option>
+                            </select>
+                        </div>
+
+                        <div class="select-container" flex="30">
+                            <label for="subTypeOne" > 
+                                {{(tmp.typeObj === undefined)?'子类别':(tmp.typeObj.id===1 ? '房间类别' : '用餐类别')}}
+                            </label>
+                                <select class="form-control" 
+                                        id="subTypeOne" required
+                                        ng-model="tmp.subTypeOneObj" 
+                                        ng-init="tmp.subTypeOneObj = undefined"
+                                        name='sub_type_one'
+                                        ng-options="subTypeOne as subTypeOne.name for subTypeOne in tmp.typeObj.subTypesOne track by subTypeOne.id"
+                                        >
+                                        <option value=""> - 请选择 - </option>
+                                </select>
+                        </div>
+
+                        <!-- 接待标准 -->
+                        <div class="select-container" flex>
+                            <label for="srvPrice">
+                                {{(tmp.typeObj === undefined) ? '接待标准' : (tmp.typeObj.id === 1 ? '住宿标准' : '用餐标准')}}
+                            </label>
+                            <div class="input-group">
+                                <!-- 这里min表示只能输入正数 -->
+                                <input type="number" 
+                                       name='price' 
+                                       placeholder="请输入"
+                                       ng-model="tmp.price" 
+                                       class="form-control" 
+                                       id="price" 
+                                       min="1" required
+                                       aria-describedby="price-addon" />
+                                <span class="input-group-addon" id="price-addon" style="padding: 2px;">
+                                    {{tmp.typeObj == undefined ? "标准" : tmp.typeObj.rate}}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 第二行，日期,datepicker, 住宿天数由两个日期自动计算出来 -->
+                    <!-- 开始日期 -->
+                    <div class="form-group" layout="row" flex>
+                        <div class="select-container" flex="30">
+                            <label for="startDate">
+                                {{(tmp.typeObj === undefined) ? '开始日期' : (tmp.typeObj.id === 1 ? '入住日期' : '开始日期')}}
+                            </label>
+                            <datepicker date-format="yyyy-MM-dd" >
+                            <input type="text" 
+                                   name='start_date' 
+                                   placeholder="请选择"
+                                   ng-model="tmp.startDate" 
+                                   class="form-control" 
+                                   id="startDate" required />
+                            </datepicker>
+                        </div>
+
+                        <!-- 结束日期 -->
+                        <div class="select-container" flex="30">
+                            <label for="endDate">
+                                {{(tmp.typeObj === undefined) ? '结束日期' : (tmp.typeObj.id === 1 ? '退房日期' : '结束日期')}}
+                            </label>
+                            <datepicker date-format="yyyy-MM-dd" >
+                            <input type="text" 
+                                   name='end_date' 
+                                   placeholder="请选择"
+                                   ng-model="tmp.endDate" 
+                                   class="form-control" 
+                                   id="endDate" required />
+                            </datepicker>
+                        </div>
+
+                        <!-- 数量（人数/房间数） -->
+                        <div class="select-container" flex="30 nogrow">
+                            <label for="amount">
+                                {{(tmp.typeObj === undefined) ? '数 量' : (tmp.typeObj.id === 1 ? '房间数' : '用餐人数')}}
+                            </label>
+
+                            <div class="input-group">
+                                <!-- 这里min表示只能输入正数 -->
+                                <input type="number" 
+                                       name='amount' 
+                                       placeholder="请输入"
+                                       ng-model="tmp.amount" 
+                                       class="form-control" 
+                                       id="amount" 
+                                       min="1" required
+                                       aria-describedby="amount-addon" />
+                                <span class="input-group-addon" id="amount-addon">
+                                    {{tmp.typeObj === undefined ? "单位" : tmp.typeObj.unite}}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 第三行, 餐饮情况与提交 -->
+                    <!-- 当消费类别为住宿时，用于占位 -->
+                    <div class="form-group" flex layout="row">
+                        <div flex="35" 
+                             ng-if="tmp.typeObj === undefined || !tmp.typeObj.hasOwnProperty('subTypesTwo')">
+                        </div>
+
+                        <div class="select-container"
+                             flex="35"
+                             ng-if="tmp.typeObj !== undefined && tmp.typeObj.hasOwnProperty('subTypesTwo')">
+                            <label for="site">用餐地点</label>
+                            <select class="form-control" 
+                                    id="site" required
+                                    name='site' 
+                                    ng-model="tmp.siteObj" 
+                                    ng-init="tmp.siteObj = undefined"
+                                    ng-options="site as site.name for site in tmp.typeObj.subTypesTwo track by site.id">
+                                    <option value=""> - 请选择 - </option>
+                            </select>
+                        </div>
+
+                        <!-- 用于占位 -->
+                        <div flex="35"></div>
+
+                        <span flex></span>
+                        <!--提交-->
+                        <div>
+                            <button type="submit" 
+                                    class="form-control btn btn-primary pull-right" 
+                                    ng-disabled="f.$invalid" 
+                                    ng-click="tmp.add()">
+                                增 加 》
+                            </button>
+                        </div>
+                    </div>
+                    <!--表单结束 -->
+                </form>
+            </div>
+            <md-divider></md-divider>
+
+            <span flex="nogrow"><h4>既往结帐单<i class="fa fa-archive" aria-hidden="true"></i></h4></span>
+            <div class="receipt-list-box" ng-init="receipts.init()" flex layout="column">
+                <div class="form-inline" style="padding-left: 20px;">
+                    <label for="search-text" style="display: inline-block;">搜索：</label> 
+                    <input id="search-text" 
+                           type="text" 
+                           style="width: 130px;" 
+                           ng-model="receipts.query"
+                           class="form-control"
+                           ng-change="receipts.search()" 
+                           placeholder="请输入" />
+                    <span>(编号/单位-人员/金额)</span>
+                </div>
+                <table class="table table-hover table-striped table-condensed">
+                    <thead>
+                        <tr>
+                            <th class="serialNumber">编 号</th>
+                            <th>单位-人员</th>
+                            <th class="fee">金额(元)</th>
+                        </tr>
+                    </thead>
+                    <!-- 表格分页 -->
+                    <tfoot style="position: absolute; margin-top: 155px; margin-left: 100px">
+                        <td colspan="3">
+                            <ul class="pagination pull-right">
+                                <li class="page-item" ng-class="{disabled: receipts.currentPage === 0}">
+                                    <a href ng-click="receipts.prevPage()">« 前五个</a>
+                                </li>
+                                <li class="page-item" ng-repeat="n in range(receipts.pagedItems.length)"
+                                                      ng-class="{active: n === receipts.currentPage}"
+                                                      ng-click="receipts.setPage(n)">
+                                    <a href ng-bind="n + 1">1</a>
+                                </li>
+                                <li class="page-item"
+                                    ng-class="{disabled: receipts.currentPage === receipts.pagedItems.length - 1}">
+                                    <a href ng-click="receipts.nextPage()">后五个 »</a>
+                                </li>
+                            </ul>
+                        </td>
+                    </tfoot>
+                    <tbody>
+                        <tr ng-repeat="r in receipts.pagedItems[receipts.currentPage] track by $index"
+                            ng-click="receipt.load(r)"
+                            >
+                            <td>{{r.SN}}</td>
+                            <td style="text-align: left">{{r.uniteObj.name+' - '+r.personObj.name}}</td>
+                            <td style="text-align: right">{{r.fee}}.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 右侧 -->
+        <div layout="column" flex class="container-fluid" style="padding: 5px 5px 20px 10px;">
+            <span flex="nogrow"><h3>结帐单信息<i class="fa fa-list-alt" aria-hidden="true"></i></h3></span>
+            <div flex="nogrow" class="receipt-head">
+                <h3>{{uniteName}}</h3>
+            </div>
+
+            <div flex="nogrow" layout="row">
+                <div flex="50">
+                    <h5><label for="receiptUnite" class="item-label">承办单位：</label>
+                        <div id="receiptUnite" class="underscore-need">
+                            {{receipt.uniteObj === undefined ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' : '&nbsp;&nbsp;&nbsp;&nbsp;  '+receipt.uniteObj.name+'&nbsp;&nbsp;&nbsp;&nbsp;  '}}
+                        </div>
+                    </h5>
+                </div>
+
+                <div flex="25">
+                    <h5>
+                        <label for="receiptPersonnel" class="item-label">联系人：</label>
+                        <div id="receiptPersonnel" class="underscore-need">
+                            {{receipt.personObj === undefined ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' : '&nbsp;&nbsp;&nbsp;&nbsp;  '+receipt.personObj.name+'&nbsp;&nbsp;&nbsp;&nbsp;  '}}
+                        </div>
+                    </h5>
+                </div>
+
+                <span flex></span>
+
+                <div>
+                    <h5>
+                        <label for="receiptSN" class="item-label">单号：</label>
+                        <div id="receiptSN" class="underscore-need"><code>{{receipt.SN}}</code></div>
+                    </h5>
+                </div>
+            </div>
+
+            <md-divider></md-divider>
+
+            <div flex>
+                <table class="table table-hover table-striped table-condensed">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>项 目</th>
+                            <th>开始~结束日期</th>
+                            <th>详 情</th>
+                            <th>数 量</th>
+                            <th>接待标准</th>
+                            <th>费用（元）</th>
+                            <th>删 除</th>
+                        </tr>
+                    </thead>
+                    <tbody ng-if="receipt.items.length > 0">
+                        <tr ng-repeat="item in receipt.items track by $index">
+
+                            <!--编号-->
+                            <td>{{$index + 1}}</td>
+
+                            <!-- 子类型 -->
+                            <td>{{item.typeObj.name}}</td>
+
+                            <!--开始日期 ~ 结束日期-->
+                            <td><code>{{item.startDate}}</code> ~ <code>{{item.endDate}}</code></td>
+
+                            <!--详情-->
+                            <td>{{item.subTypeOneObj.name+(item.hasOwnProperty('siteObj') ? '，'+item.siteObj.name : '')}}</td>
+
+                            <!--数量-->
+                            <td><code>{{item.amount}}</code><span>{{item.typeObj.unite }}<span></td>
+
+                            <!--标准-->
+                            <td><code>{{item.price}}</code>{{item.typeObj.rate}}</td>
+
+                            <!---->
+                            <td align="right"><code>{{item.fee}}.00</code></td>
+
+                            <!---->
+                            <td>
+                                <i role="button" 
+                                   class="fa fa-trash btn btn-danger btn-sm" 
+                                   aria-hidden="true" 
+                                   ng-click="receipt.removeItem($index)"></i>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <span style="text-align: center; width: 100%; display: block;"><i>__以下空白__</i></span>
+            </div>
+
+            <div flex="nogrow" layout="row">
+                <div flex="65">
+                    <h5>
+                        <label for="receiptFee" class="item-label">合计：</label>
+                        <div id="receiptFee" class="underscore-need">
+                            <code>{{receipt.fee === undefined ? 0 : receipt.fee}}.00</code>元（{{receipt.fee === undefined ? '零圆' : receipt.feeUppercase}}）</div>
+                    </h5>
+                </div>
+                <div flex="35">
+                    <h5>
+                        <label for="receiptPayment" class="item-label">结帐方式：</label>
+                        <div id="receiptPayment" class="underscore-need">
+                            {{
+                            receipt.paymentObj === undefined ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' : '&nbsp;'+receipt.paymentObj.name+'&nbsp;'
+                            }}
+                        </div>
+                    </h5>
+                </div>
+            </div>
+
+            <md-divider></md-divider>
+
+            <!-- 保存、打印-->
+            <div flex="nogrow" layout="row">
+                <span flex></span>
+                <div flex="25">
+                    <button class="btn btn-primary"
+                            ng-click="receipt.init()" >                            
+                            新建结帐单(<i class="fa fa-file-o" aria-hidden="true"></i>)
+                    </button>
+                </div>
+                <div flex="25">
+                    <button class="btn btn-primary"
+                            ng-click="receipt.save()" 
+                            ng-disabled="receipt.saved || receipt.items.length === 0" >
+                            {{
+                            receipt.saved === false?'保存':'已保存'
+                            }}(<i class="fa fa-floppy-o" aria-hidden="true"></i>)
+                    </button>
+                </div>
+                <div flex="25">
+                    <button class="btn btn-primary"
+                            ng-click="receipt.print()" 
+                            ng-disabled="receipt.items.length === 0" >
+                            打印(<i class="fa fa-print" aria-hidden="true"></i>)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 这一行很重要，否则无法使用jQuery, 以致无法使用Bootstrap -->
+        <script>window.$ = window.jQuery = require('../node_modules/jquery/dist/jquery.min');</script>
+
+        <script>require("../node_modules/bootstrap/dist/js/bootstrap.min.js")</script>
+        <script>require("../node_modules/angular/angular.min.js")</script>
+
+        <!-- for ngMaterial-->
+        <script>require("../node_modules/angular-animate/angular-animate.min.js")</script>
+        <script>require("../node_modules/angular-aria/angular-aria.min.js")</script>
+        <script>require("../node_modules/angular-messages/angular-messages.min.js")</script>
+        <script>require("../node_modules/angular-material/angular-material.min.js")</script>
+
+        <script>require("../node_modules/angular-route/angular-route.min.js")</script>
+        <script>require("../node_modules/angular-sanitize/angular-sanitize.min.js")</script>
+        <script>require("../node_modules/angularjs-datepicker/src/js/angular-datepicker.js")</script>
+        <script>require("../node_modules/angular-i18n/angular-locale_zh-cn.js")</script>
+    </body>
+    <script>require('./js/app')</script>
+</html>

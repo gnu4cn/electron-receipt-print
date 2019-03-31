@@ -1,0 +1,105 @@
+/* Generic pane rules */
+md-autocomplete {
+    min-width: 40px !important;
+}
+
+.md-virtual-repeat-container.md-autocomplete-suggestions-container { 
+    position: fixed; 
+    bottom: 380px !important; 
+    height: initial !important; 
+    max-height: 99999999px !important; 
+}
+
+body, html{ 
+    overflow: hidden;
+    margin: 0; 
+    height: 100%;
+    padding: 0;
+}
+
+ul, li {
+    display: inline;
+}
+
+.pagination {
+    margin-top: 5px;
+}
+
+.receipt-list-box {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.receipt-form {
+    border-bottom: 1px solid grey;
+}
+
+.form-control {
+    padding-top: 6px;
+    padding-right: 10px;
+    padding-bottom: 6px;
+    padding-left: 6px;
+}
+
+.select-container {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+td, th {
+    vertical-align: middle;
+    text-align: center;
+}
+
+.underscore-need {
+    padding: 5px;
+    display: inline-block;
+    border-bottom: 1px solid grey;
+}
+
+.container-fluid {
+    height: 100%;
+}
+
+.receipt-head {
+    text-align: center;
+}
+
+.item-label{
+    /* Other styling.. */
+    text-align: right;
+    clear: both;
+    float:left;
+    margin-right:15px;
+}
+
+.container-fluid {
+    padding: 0;
+}
+
+ul {
+    list-style: none;
+}
+
+.left {
+    height: 100%; border: 1px solid gray;
+}
+
+.right {
+    height: 100%; border: 1px solid gray;
+    font-size: 
+}
+
+.second-bottom-div {
+    position: absolute;
+    bottom: 65px;
+    width: 100%;
+}
+
+.last-bottom-div {
+    position: absolute;
+    bottom: 5px;
+    width: 100%;
+}
