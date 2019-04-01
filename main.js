@@ -12,9 +12,6 @@ const store = new Store();
 // process 用于判断是否是 MacOS 系统
 const process = require('process');
 
-// crud 用于操作 LevelDB
-const crud = require('./crud');
-
 // conf 存储程序参数
 const conf = require('./config')
 
@@ -115,7 +112,7 @@ function createWindow(page, width, height) {
         // when you should delete the corresponding element.
 
         mainWindow = null;
-        crud.db.close();
+        lib.db.close();
 
         // 下面的代码，令到程序真正退出
         BrowserWindow.getAllWindows().forEach((w)=>{
@@ -168,7 +165,7 @@ app.on('window-all-closed', () => {
     // to stay active until the user quits explicitly with Cmd + Q
     if (process.platform !== 'darwin') {
         app.quit();
-        crud.db.close();
+        lib.db.close();
     }
 })
 
@@ -202,7 +199,7 @@ ipcMain.on('save-req', (event, arg) => {
         'parentSN': parentSN
     }
 
-    crud.find(paras, (res) => {
+    lib.find(paras, (res) => {
         var data = arg.data;
 
         if ( data.SN === undefined ){ 
@@ -215,7 +212,7 @@ ipcMain.on('save-req', (event, arg) => {
 
         var key = isChildType ? `${type}:${parentSN}:${SN}` : `${type}:${SN}`;
 
-        crud.put(key, data, (err) => {
+        lib.put(key, data, (err) => {
             if (err) return console.log(err);
 
             data.saved = true;
@@ -237,7 +234,7 @@ ipcMain.on('get-SN-req', (event, arg) => {
         'parentSN': parentSN
     }
 
-    crud.find(paras, (res) => {
+    lib.find(paras, (res) => {
         event.sender.send(`get-SN-reply-${arg.type}`, lib.getSN(res));
     });
 });
@@ -255,7 +252,7 @@ ipcMain.on('fetch-all-req', (event, arg) => {
         'parentSN': parentSN
     }
 
-    crud.find(paras, (res) => {
+    lib.find(paras, (res) => {
         event.sender.send(`fetch-all-reply-${type}`, res);
     });
 });
@@ -265,7 +262,7 @@ ipcMain.on('print-req', (event, arg) => {
     // 利用arg, 构造一个查询的key
     var key = `${arg.type}:${arg.SN}`;
 
-    crud.get(key, (err, res)=>{
+    lib.get(key, (err, res)=>{
         if (err) return console.log(err);
 
         // 这里已经获取到要打印结帐单的数据，可（1）直接打印，或（2）新开一个窗口打印
