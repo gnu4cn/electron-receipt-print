@@ -12,7 +12,13 @@
 ```
 ├── config.js
 ├── copying
-├── crud.js
+├── db
+│   ├── 000007.log
+│   ├── CURRENT
+│   ├── LOCK
+│   ├── LOG
+│   ├── LOG.old
+│   └── MANIFEST-000006
 ├── git-push.sh
 ├── installers
 │   ├── setupEvents.js
@@ -25,8 +31,6 @@
 ├── package-lock.json
 ├── README.md
 ├── Release.key
-├── store
-│   └── 000109.log
 ├── tree.sh
 └── ui
     ├── about.html
@@ -36,12 +40,14 @@
     │   ├── app_dark.css
     │   └── print.css
     ├── img
+    │   ├── Alipay.jpg
     │   ├── Boostrap_logo.svg
     │   ├── Electron.svg
     │   ├── icon.ico
     │   ├── leveldb-logo.svg
     │   ├── ngMaterial-logo.svg
-    │   └── nodejs-logo.svg
+    │   ├── nodejs-logo.svg
+    │   └── WeChat-Pay.jpg
     ├── js
     │   ├── about.js
     │   ├── app.js
@@ -49,7 +55,6 @@
     │   └── title.js
     ├── print.html
     └── title.html
-
 ```
 
 ## Windows 系统 Electron 环境的搭建
