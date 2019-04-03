@@ -59,7 +59,7 @@ const menuTemplate = [
         click() {
             createPopupWindow({
                 height: 480,
-                width: 400, 
+                width: 460, 
                 title: "关于", 
                 view: 'about'
             });
